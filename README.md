@@ -2,24 +2,53 @@
 
 A production-level incident response case study isolating an application-layer outage behind an AWS Application Load Balancer (ALB). Part of the **Cloud Troubleshooting Series (CTS)**.
 
-## ?? Incident Profile
+## Incident Profile
 - **Date:** 23 June 2026
 - **Severity:** P1 (Production Outage)
 - **Status:** Resolved
 - **Root Cause:** Intentional application termination (Flask daemon killed)
 - **Impact:** External users received an \HTTP 502 Bad Gateway\ at the load balancer ingress point.
 
+  cloud-troubleshooting-series-01-alb-502/
+│
+├── terraform/
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── outputs.tf
+│   └── user-data.sh
+│
+├── app/
+│   ├── app.py
+│   └── requirements.txt
+│
+├── incident/
+│   ├── INCIDENT.md
+│   ├── ROOT-CAUSE.md
+│   ├── TIMELINE.md
+│   └── RECOVERY.md
+│
+├── screenshots/
+│
+├── README.md
+│
+└── .gitignore
+
 ---
 
-## ??? Architecture Layout
+## Architecture Layout
 Traffic flows through a standard high-availability edge routing design:
 \\\	ext
 Internet ---> Application Load Balancer (Port 80) ---> Target Group ---> EC2 Instance ---> Flask App (Port 5000)
 \\\
+[ Internet ] ---> ( ALB:80 ) ---> [ Target Group ] --x--> ( EC2:5000 ) ---> [ Flask App ]
+                                                       ^
+                                            [ Connection Refused ]
+                                            (Process was killed!)
+
 
 ---
 
-## ??? Phase 1: The Outage & Triage Timeline
+## Phase 1: The Outage & Triage Timeline
 
 ### 1. Ingress Symptom
 When visiting the Application Load Balancer URL, the edge proxy returned a definitive error:
@@ -39,11 +68,11 @@ Verified the core instance state via the AWS CLI/Console:
 
 ---
 
-## ?? Phase 2: Deep-Dive Linux Investigation
+## Phase 2: Deep-Dive Linux Investigation
 
 With the infrastructure verified as running, we initiated an internal systems audit via secure SSH tunnel to inspect the server internals.
 
-### ?? Execution Log & Commands Run:
+### Execution Log & Commands Run:
 1. **Process Inspection:** Checked for active python runtimes:
    \\\ash
    ps aux | grep python3
@@ -64,7 +93,7 @@ With the infrastructure verified as running, we initiated an internal systems au
 
 ---
 
-## ?? Phase 3: Recovery Actions
+## Phase 3: Recovery Actions
 
 ### 1. Manual Application Patch
 Manually re-initialized the background daemon to restore immediate application delivery:
@@ -84,7 +113,7 @@ Refreshed the public-facing ALB endpoint string:
 
 ---
 
-## ?? Lessons Learned & Key Takeaways
+## Lessons Learned & Key Takeaways
 1. **Isolate Layers Early:** A 502 error proves the ALB is alive but its backend target is unresponsive. Checking Target Group health immediately differentiates a network routing issue from a service crash.
 2. **Declarative Code vs. Imperative State:** Changing infrastructure code (\main.tf\) to troubleshoot a runtime crash creates code drift. Live application processes must be investigated at the OS layer.
 3. **Decouple Startup Scripts:** Utilizing an external \user-data.sh\ script maintains strict separation of concerns between underlying cloud components and bootstrap configurations.
