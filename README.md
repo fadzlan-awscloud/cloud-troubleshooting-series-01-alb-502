@@ -107,7 +107,7 @@ nohup python3 /home/ubuntu/app.py > /home/ubuntu/app.log 2>&1 &
 
 ### 3. Final Verification
 Refreshed the public-facing ALB endpoint string:
-- **Link:** \http://cts-01-routing-proxy-911450682.ap-southeast-1.elb.amazonaws.com\
+- **Link:** \
 - **Result:** Successful text rendering. Code execution restored.
 - **Evidence Reference:** \screenshots/cts-01-evidence-06-success-browser.png\
 
