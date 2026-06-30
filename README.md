@@ -54,13 +54,14 @@ Internet ---> Application Load Balancer (Port 80) ---> Target Group ---> EC2 Ins
 When visiting the Application Load Balancer URL, the edge proxy returned a definitive error:
 - **Symptom:** \502 Bad Gateway\
 - **Evidence Reference:**\'screenshots/502-bad-gateway-error.png\`
-  ![Ingress symptom](502-bad-gateway.png)
+ ![Ingress symptom](screenshots/502-bad-gateway-error.png)
   
 ### 2. Target Group Audit
 Inspected the AWS Target Group status to verify routing health:
 - **Status:** \unhealthy\
 - **Reason:** \Target.Timeout\ (Health checks failing on Port 5000)
-- **Evidence Reference:** ![Target_group_audit](cts-01-evidence-03-unhealthy-tg.png\
+- **Evidence Reference:**
+  ![Target group_audit](cts-01-evidence-03-unhealthy-tg.png)
 
 ### 3. Compute Infrastructure Verification
 Verified the core instance state via the AWS CLI/Console:
