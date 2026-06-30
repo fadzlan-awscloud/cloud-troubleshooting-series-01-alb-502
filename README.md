@@ -53,13 +53,13 @@ Internet ---> Application Load Balancer (Port 80) ---> Target Group ---> EC2 Ins
 ### 1. Ingress Symptom
 When visiting the Application Load Balancer URL, the edge proxy returned a definitive error:
 - **Symptom:** \502 Bad Gateway\
-- **Evidence Reference:** \screenshots/cts-01-evidence-01-browser-502.png\
-
+- **Evidence Reference:** ![Ingress_symptom](502-bad-gateway-error.png)
+  
 ### 2. Target Group Audit
 Inspected the AWS Target Group status to verify routing health:
 - **Status:** \unhealthy\
 - **Reason:** \Target.Timeout\ (Health checks failing on Port 5000)
-- **Evidence Reference:** \screenshots/cts-01-evidence-02-target-unhealthy.png\
+- **Evidence Reference:** ![Target_group_audit](cts-01-evidence-03-unhealthy-tg.png\
 
 ### 3. Compute Infrastructure Verification
 Verified the core instance state via the AWS CLI/Console:
@@ -74,19 +74,19 @@ With the infrastructure verified as running, we initiated an internal systems au
 
 ### Execution Log & Commands Run:
 1. **Process Inspection:** Checked for active python runtimes:
-   \\\ash
+   \\\bash
    ps aux | grep python3
    \\\
    *Result:* Confirmed **0 active processes** for \pp.py\. The application process had ceased.
 
 2. **Local Port Bind Verification:** Tested internal listener loopbacks:
-   \\\ash
+   \\\bash
    curl localhost:5000
    \\\
    *Result:* \Failed to connect to localhost port 5000: Connection refused\.
 
 3. **Deployment Log Audit:** Verified that the startup initialization executed successfully without installation errors:
-   \\\ash
+   \\\bash
    cat /var/log/cloud-init-output.log
    \\\
    *Result:* Dependencies installed correctly during system boot; process was killed post-deployment.
