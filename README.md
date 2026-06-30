@@ -53,7 +53,7 @@ Internet ---> Application Load Balancer (Port 80) ---> Target Group ---> EC2 Ins
 ### 1. Ingress Symptom
 When visiting the Application Load Balancer URL, the edge proxy returned a definitive error:
 - **Symptom:** \502 Bad Gateway\
-- **Evidence Reference:**
+- **Evidence Reference:**\'screenshots/502-bad-gateway-error.png\`
   ![Ingress symptom](502-bad-gateway-error.png)
   
 ### 2. Target Group Audit
