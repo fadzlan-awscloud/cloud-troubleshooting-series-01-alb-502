@@ -79,7 +79,7 @@ With the infrastructure verified as running, we initiated an internal systems au
    \\\bash
    ps aux | grep python3
    \\\
-   *Result:* Confirmed **0 active processes** for \pp.py\. The application process had ceased.
+   *Result:* Confirmed **0 active processes** for \app.py\. The application process had ceased.
 
 2. **Local Port Bind Verification:** Tested internal listener loopbacks:
    \\\bash
@@ -99,7 +99,7 @@ With the infrastructure verified as running, we initiated an internal systems au
 
 ### 1. Manual Application Patch
 Manually re-initialized the background daemon to restore immediate application delivery:
-\\\ash
+\\\bash
 nohup python3 /home/ubuntu/app.py > /home/ubuntu/app.log 2>&1 &
 \\\
 
