@@ -54,7 +54,7 @@ Internet ---> Application Load Balancer (Port 80) ---> Target Group ---> EC2 Ins
 When visiting the Application Load Balancer URL, the edge proxy returned a definitive error:
 - **Symptom:** \502 Bad Gateway\
 - **Evidence Reference:**\'screenshots/502-bad-gateway-error.png\`
- ![Ingress symptom](screenshots/502-bad-gateway-error.png)
+ ![Ingress symptom](502-bad-gateway-error.png)
   
 ### 2. Target Group Audit
 Inspected the AWS Target Group status to verify routing health:
@@ -104,14 +104,13 @@ nohup python3 /home/ubuntu/app.py > /home/ubuntu/app.log 2>&1 &
 \\\
 
 ### 2. Infrastructure Validation
-- Checked the local socket: \curl localhost:5000\ returned \HTTP 200 OK\ (Hello from ip-...).
 - Monitored the AWS Target Group until status transitioned back to **\healthy (1/1 targets)\**.
 
 ### 3. Final Verification
-Refreshed the public-facing ALB endpoint string:
-- **Link:** \
-- **Result:** Successful text rendering. Code execution restored.
+modify group of target health extended another port to port 22
+- **Result:** Successful port execution restored.
 - **Evidence Reference:** \screenshots/cts-01-evidence-06-success-browser.png\
+  ![target health](aws-target-group-healthy.png)
 
 ---
 
