@@ -1,91 +1,84 @@
 # CTS-01: ALB 502 Bad Gateway (Flask Process Failure)
 
-A production-level incident response case study isolating an application-layer outage behind an AWS Application Load Balancer (ALB). Part of the **Cloud Troubleshooting Series (CTS)**.
+Production incident simulation demonstrating how to investigate and recover an AWS Application
 
-## Incident Profile
-- **Date:** 23 June 2026
-- **Severity:** P1 (Production Outage)
-- **Status:** Resolved
-- **Root Cause:** Intentional application termination (Flask daemon killed)
-- **Impact:** External users received an \HTTP 502 Bad Gateway\ at the load balancer ingress point.
+# Incident Summary
 
-  cloud-troubleshooting-series-01-alb-502/
-│
-├── terraform/
-│   ├── main.tf
-│   ├── variables.tf
-│   ├── outputs.tf
-│   └── user-data.sh
-│
-├── app/
-│   ├── app.py
-│   └── requirements.txt
-│
-├── incident/
-│   ├── INCIDENT.md
-│   ├── ROOT-CAUSE.md
-│   ├── TIMELINE.md
-│   └── RECOVERY.md
-│
-├── screenshots/
-│
-├── README.md
-│
-└── .gitignore
+| Item | Details |
+|------|---------|
+| Incident ID | CTS-01 |
+| Environment | Production Simulation |
+| Severity | P1 - Critical |
+| Service | Flask Web Application |
+| Reported Issue | 502 Bad Gateway |
+| Status | Resolved |
+| Root Cause | Flask application process stopped |
+| Recovery Time | ~15 Minutes |
 
 ---
 
-## Architecture Layout
-Traffic flows through a standard high-availability edge routing design:
-\\\	ext
-Internet ---> Application Load Balancer (Port 80) ---> Target Group ---> EC2 Instance ---> Flask App (Port 5000)
-\\\
-[ Internet ] ---> ( ALB:80 ) ---> [ Target Group ] --x--> ( EC2:5000 ) ---> [ Flask App ]
-                                                       ^
-                                            [ Connection Refused ]
-                                            (Process was killed!)
+# Project Objective
+
+Simulate a real production outage where users are unable to access a web application through an Application Load Balancer.
+The objective is to investigate the issue using AWS and Linux tools, identify the root cause, restore the application, and document the complete troubleshooting process.
 
 
+# Architecture Layout
+
+                  Internet
+                     │
+                     ▼
+      Application Load Balancer (Port 80)
+                     │
+                     ▼
+              Target Group
+                     │
+                     ▼
+              EC2 Ubuntu Instance
+                     │
+             Flask Application
+                Port 5000
 ---
 
-## Phase 1: The Outage & Triage Timeline
+# Phase 1: The Outage & Triage Timeline
 
-### 1. Ingress Symptom
+## 1. Ingress Symptom
 When visiting the Application Load Balancer URL, the edge proxy returned a definitive error:
 - **Symptom:** \502 Bad Gateway\
 - **Evidence Reference:**\'screenshots/502-bad-gateway-error.png\`
  ![Ingress symptom](502-bad-gateway-error.png)
   
-### 2. Target Group Audit
-Inspected the AWS Target Group status to verify routing health:
+## 2. Target Group Audit
+Opened the AWS Target Group and found that the EC2 instance was marked Unhealthy. This confirmed that the Application Load Balancer was working correctly, but it could not reach the Flask application running on the backend instance:
 - **Status:** \unhealthy\
 - **Reason:** \Target.Timeout\ (Health checks failing on Port 5000)
 - **Evidence Reference:**
   ![Target group_audit](cts-01-evidence-03-unhealthy-tg.png)
 
-### 3. Compute Infrastructure Verification
+## 3. Compute Infrastructure Verification
 Verified the core instance state via the AWS CLI/Console:
 - **EC2 State:** \Running\
 - **Conclusion:** The virtual machine was completely stable, indicating the failure was isolated to the internal networking layer or application runtime.
 
 ---
 
-## Phase 2: Deep-Dive Linux Investigation
+# Phase 2: Deep-Dive Linux Investigation
 
 With the infrastructure verified as running, we initiated an internal systems audit via secure SSH tunnel to inspect the server internals.
 
-### Execution Log & Commands Run:
-1. **Process Inspection:** Checked for active python runtimes:
+## Investigation Process:
+1. **Check whether the Flask application is running:** Checked for active python runtimes:
    \\\bash
    ps aux | grep python3
    \\\
-   *Result:* Confirmed **0 active processes** for \app.py\. The application process had ceased.
+   *Result:* No Flask process was running.This indicated that the application had stopped.
 
 2. **Local Port Bind Verification:** Tested internal listener loopbacks:
    \\\bash
    curl localhost:5000
    \\\
-   *Result:* \Failed to connect to localhost port 5000: Connection refused\.
+   *Result:* \Failed to connect to localhost port 5000: Connection refused\.Since localhost could not reach port 5000,
+    the issue was inside the EC2 instance rather than the ALB.
 
 3. **Deployment Log Audit:** Verified that the startup initialization executed successfully without installation errors:
    \\\bash
@@ -97,24 +90,33 @@ With the infrastructure verified as running, we initiated an internal systems au
 
 ## Phase 3: Recovery Actions
 
-### 1. Manual Application Patch
+### 1. Restore the application
 Manually re-initialized the background daemon to restore immediate application delivery:
 \\\bash
-nohup python3 /home/ubuntu/app.py > /home/ubuntu/app.log 2>&1 &
+nohup python3 /home/ubuntu/app.py & > /home/ubuntu/app.log 
 \\\
 
-### 2. Infrastructure Validation
+### 2. Confirm the fix
 - Monitored the AWS Target Group until status transitioned back to **\healthy (1/1 targets)\**.
 
 ### 3. Final Verification
 modify group of target health extended another port to port 22
-- **Result:** Successful port execution restored.
+- **Result:** Flask started successfully.The application became reachable again on port 5000
 - **Evidence Reference:** \screenshots/cts-01-evidence-06-success-browser.png\
   ![target health](aws-target-group-healthy.png)
 
 ---
 
-## Lessons Learned & Key Takeaways
-1. **Isolate Layers Early:** A 502 error proves the ALB is alive but its backend target is unresponsive. Checking Target Group health immediately differentiates a network routing issue from a service crash.
-2. **Declarative Code vs. Imperative State:** Changing infrastructure code (\main.tf\) to troubleshoot a runtime crash creates code drift. Live application processes must be investigated at the OS layer.
-3. **Decouple Startup Scripts:** Utilizing an external \user-data.sh\ script maintains strict separation of concerns between underlying cloud components and bootstrap configurations.
+## Skills Demonstrated 
+- Investigated a production-style 502 Bad Gateway incident.
+- Verified ALB, Target Group, and EC2 health status.
+- Used Linux commands to identify that the Flask process had stopped.
+- Restored the application service manually.
+- Validated recovery using AWS Target Groups and browser testing.
+- Performed root cause analysis and documented the complete incident.
+
+## Final Result
+- Application recovered
+- Target Group healthy
+- ALB serving traffic successfully
+- Production incident resolved
